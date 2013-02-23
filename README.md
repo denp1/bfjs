@@ -13,10 +13,10 @@ updates the chart every second.
 Install
 =======
 
-The script runs as a bookmarklet `bookmarklet <http://en.wikipedia.org/wiki/Bookmarklet>`.
+The script runs as a [bookmarklet](http://en.wikipedia.org/wiki/Bookmarklet).
 To convert the javascript to a bookmarklet, two steps are required.
   * Minifiy bfpie.js using a minifier that doesn't leave newlines in the source, such as
-an instance of  `YUI Compressor <http://refresh-sf.com/yui/>'
+an instance of  [YUI Compressor](http://refresh-sf.com/yui/)
   * Create a bookmark in your browser (not IE), enter 'javascript:' and the result
 of the minification into the address field.
 
@@ -27,6 +27,7 @@ License
 =======
 
 Apache 2.0
+
 http://www.apache.org/licenses/LICENSE-2.0
 
 
