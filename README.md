@@ -6,8 +6,8 @@ What is it
 ==========
 
 **bfjs** is a javascript bookmarklet for added live charts and related information to the 
-standard abcdef screens.  It works by loading a graphing javascript library, d3.js, and 
-manipulating the abcdef DOM to insert elements.  It then refreshes market prices and 
+standard Betfair screens.  It works by loading a graphing javascript library, d3.js, and 
+manipulating the Betfair DOM to insert elements.  It then refreshes market prices and 
 updates the chart every second.  You can see it in action [here](http://vimeo.com/60371282).
 
 Install
