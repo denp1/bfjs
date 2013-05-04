@@ -16,11 +16,11 @@ Install
 The script runs as a [bookmarklet](http://en.wikipedia.org/wiki/Bookmarklet).
 To convert the javascript to a bookmarklet, two steps are required.
   * Minifiy bfpie.js using a minifier that doesn't leave newlines in the source, such as
-an instance of  [YUI Compressor](http://refresh-sf.com/yui/).  Or simply copy the contents
-of the minified version.
-  * Create a bookmark in your browser, enter the result 
-of the minification into the address field.  Works on Chrome, Firefox and Safari on MacOS,
-and Windows (except for Safari which wouldn't accept the bookmark on Windows).
+an instance of  [YUI Compressor](http://refresh-sf.com/yui/) and prepend 'javascript:' to it.  
+Or simply copy the contents of the minified version.
+  * Create a bookmark in your browser, enter the result of the minification into the address 
+field.  Works on Chrome, Firefox and Safari on MacOS, and Windows (except for Safari which 
+wouldn't accept the bookmark on Windows).
 
 To use it, go to a "Win Only Market" (i.e. not any form of Handicap market or other
 variant) such as football Match Odds, or Correct Score and click on the bookmark.
