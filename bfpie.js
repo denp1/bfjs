@@ -1,17 +1,25 @@
 // started from http://bl.ocks.org/1346410
 // Color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/)
 var colorbrewer = {3: ["rgb(252,141,89)", "rgb(255,255,191)", "rgb(153,213,148)"], 4: ["rgb(215,25,28)", "rgb(253,174,97)", "rgb(171,221,164)", "rgb(43,131,186)"], 5: ["rgb(215,25,28)", "rgb(253,174,97)", "rgb(255,255,191)", "rgb(171,221,164)", "rgb(43,131,186)"], 6: ["rgb(213,62,79)", "rgb(252,141,89)", "rgb(254,224,139)", "rgb(230,245,152)", "rgb(153,213,148)", "rgb(50,136,189)"], 7: ["rgb(213,62,79)", "rgb(252,141,89)", "rgb(254,224,139)", "rgb(255,255,191)", "rgb(230,245,152)", "rgb(153,213,148)", "rgb(50,136,189)"], 8: ["rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)", "rgb(254,224,139)", "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)", "rgb(50,136,189)"], 9: ["rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)", "rgb(254,224,139)", "rgb(255,255,191)", "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)", "rgb(50,136,189)"], 10: ["rgb(158,1,66)", "rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)", "rgb(254,224,139)", "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)", "rgb(50,136,189)", "rgb(94,79,162)"], 11: ["rgb(158,1,66)", "rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)", "rgb(254,224,139)", "rgb(255,255,191)", "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)", "rgb(50,136,189)", "rgb(94,79,162)"]},
-    width = 350,
-    height = 200,
-    radius = Math.min(width, height) / 2,
-    sections,
+    pieWidth = 160,
+    pieHeight = 200,
+    pieLeftMargin,
+    pieRadius = Math.min(pieWidth, pieHeight) / 2,
+    pieSections,
+    barWidth = 16,
+    barMargin,
+    tradedVolumeElements,
     runnerList,
     refreshButton,
     priceButtons,
     runnerLabels,
-    latestprices,
+    latestPrices,
     numberOfRunners,
-    colour;
+    colour,
+    tradedVolume=[],
+    timeSlot = 0,
+    lastTotal = 0,
+    maxVol=100;
 
 // functions for navigating different versions of site 
 var updatePriceButtons,
@@ -29,9 +37,9 @@ function mod(n, d) {return n - (Math.floor(n/d) * d);}
 function getMaxPrice(isBackPrice) {return isBackPrice ? 1.0 : 1.0 / 10000.0;}
 
 var colourChooser = [
-    function(ix){return d3.rgb(colour(Math.floor(ix/3))).darker(0.3);},
-    function(ix){return colour(numberOfRunners);},
-    function(ix){return d3.rgb(colour(Math.floor(ix/3))).brighter(0.3);}
+    function(ix){return d3.rgb(colour(Math.floor(ix/3))).darker(0.3);},  // backable prices
+    function(ix){return colour(numberOfRunners);},                       // spread
+    function(ix){return d3.rgb(colour(Math.floor(ix/3))).brighter(0.3);} // layable prices
     ];
 
 function getColour(d, ix) { return colourChooser[mod(ix, 3)](ix);}
@@ -49,7 +57,7 @@ function refreshPrices() {
     e.initEvent("click", true, false);
     refreshButton.dispatchEvent(e);
 }
-
+// for old version of the website, has embedded frames that select doesn't navigate
 function getMainDoc() {
     return d3.select(d3.select("#site_sports")[0][0].contentDocument)
         .select("#main")[0][0].contentDocument;
@@ -74,7 +82,11 @@ function grabPrices() {
 }
 
 function getPrice(isBackPrice, w) {
-    var txt = w.childNodes[getPriceButton(w.childNodes.length)].textContent.trim().replace(',', '');
+    var button = w.childNodes[getPriceButton(w.childNodes.length)];
+    if (button === undefined) {
+        return getMaxPrice(isBackPrice);
+    }
+    var txt = button.textContent.trim().replace(',', '');
     if ((txt === "&nbsp;") || (txt.length === 0)) {
         return getMaxPrice(isBackPrice);
     } else {
@@ -83,53 +95,73 @@ function getPrice(isBackPrice, w) {
 }
 
 function getDepth(w) {
-    var txt = w.childNodes[getDepthButton(w.childNodes.length)].textContent.trim().replace(',', '');
+    var button = w.childNodes[getDepthButton(w.childNodes.length)];
+    if (button === undefined) {
+        return 0.0;
+    }
+    var txt = button.textContent.trim().replace(',', '');
     return (txt.length < 2) ? 0.0 : parseFloat(txt.substring(1));
+}
+
+function updateVolumes() {
+
+    newTotal = parseFloat(totalMatched()[0][0].textContent.substring(4).replace(/,/g,''));
+    if (lastTotal != 0) {
+        tradedVolume.shift();
+        tradedVolume.push({time: timeSlot++, value: newTotal - lastTotal});
+    }
+    maxVol = 0;
+    for (var i = 0; i<tradedVolumeElements; i++) {
+        maxVol = Math.max(maxVol, tradedVolume[i].value);
+    }
+    lastTotal = newTotal;
 }
 
 function updatePrices() {
 
+    updateVolumes();
+
     priceButtons = updatePriceButtons();
 
-    latestprices = grabPrices();
-    var totalBack = latestprices.reduce(function(a, b) {
+    latestPrices = grabPrices();
+    var totalBack = latestPrices.reduce(function(a, b) {
             return {backPrice: a.backPrice + b.backPrice};
         }).backPrice,
-        totalLay = latestprices.reduce(function(a, b) {
+        totalLay = latestPrices.reduce(function(a, b) {
             return {layPrice: a.layPrice  + b.layPrice};
         }).layPrice,
-        totalSpread = latestprices.reduce(function(a, b) {
+        totalSpread = latestPrices.reduce(function(a, b) {
             return {spread: a.spread  + b.spread};
         }).spread;
 
     for (i = 0; i < numberOfRunners; i++) {
-        var otherLays   = totalLay  - latestprices[i].layPrice, 
-            otherBacks  = totalBack - latestprices[i].backPrice,
-            notMoreThan = Math.min(latestprices[i].backPrice, 1.0 - otherLays),
-            notLessThan = Math.max(latestprices[i].layPrice, 1.0 - otherBacks);
+        var otherLays   = totalLay  - latestPrices[i].layPrice, 
+            otherBacks  = totalBack - latestPrices[i].backPrice,
+            notMoreThan = Math.min(latestPrices[i].backPrice, 1.0 - otherLays),
+            notLessThan = Math.max(latestPrices[i].layPrice, 1.0 - otherBacks);
 
-        latestprices[i].rawRatio = (notMoreThan + notLessThan) / 2.0;
+        latestPrices[i].rawRatio = (notMoreThan + notLessThan) / 2.0;
     }
 
-    var overBy = 1.0 - latestprices.reduce(function(a, b) {return {rawRatio: a.rawRatio + b.rawRatio};}).rawRatio;
+    var overBy = 1.0 - latestPrices.reduce(function(a, b) {return {rawRatio: a.rawRatio + b.rawRatio};}).rawRatio;
 
     for (i = 0; i < numberOfRunners; i++) {
-        latestprices[i].overBy = latestprices[i].spread * overBy / totalSpread;
-        latestprices[i].finalArc = latestprices[i].overBy + latestprices[i].rawRatio;
+        latestPrices[i].overBy = latestPrices[i].spread * overBy / totalSpread;
+        latestPrices[i].finalArc = latestPrices[i].overBy + latestPrices[i].rawRatio;
 
-        var d1 = latestprices[i].backDepth;
-        var d2 = latestprices[i].layDepth;
+        var d1 = latestPrices[i].backDepth;
+        var d2 = latestPrices[i].layDepth;
 
         if ((d1 + d2) === 0.0) {
             d1 = 1.0;
             d2 = 1.0;
         }
 
-        var arcSpread = latestprices[i].spread * latestprices[i].finalArc / 2.0;
+        var arcSpread = latestPrices[i].spread * latestPrices[i].finalArc / 2.0;
 
-        sections[(i*3)]   = (latestprices[i].finalArc - arcSpread) * (d1 / (d1 + d2));
-        sections[(i*3)+1] = arcSpread * 2.0;
-        sections[(i*3)+2] = (latestprices[i].finalArc - arcSpread) * (d2 / (d1 + d2));
+        pieSections[(i*3)]   = (latestPrices[i].finalArc - arcSpread) * (d1 / (d1 + d2));
+        pieSections[(i*3)+1] = arcSpread * 2.0;
+        pieSections[(i*3)+2] = (latestPrices[i].finalArc - arcSpread) * (d2 / (d1 + d2));
     }
 }
 
@@ -137,6 +169,10 @@ function d3Plot() {
 
     function setAccessFunctions() {
         if (isYui3) {
+            pieLeftMargin = 0;
+            barMargin = {top: 20, right: 20, bottom: 20, left: 40};
+            tradedVolumeElements = 27;
+
             priceButtons  = d3.selectAll('.cta-back, .cta-lay')[0];
             runnerList    = d3.select(".cont-runners");
             refreshButton = d3.select(".mkt-refresh-btn")[0][0];
@@ -146,7 +182,12 @@ function d3Plot() {
             getPriceButton      = function(l) {return 1;};
             getTooltipContainer = function()  {return d3.select("body");};
             isChartShowing      = function()  {return d3.select('#chartDiv')[0][0] !== null;};
+            totalMatched = function() {return d3.select('.total-matched-val');};
         } else {
+            pieLeftMargin = 10;
+            barMargin = {top: 20, right: 20, bottom: 20, left: 40};
+            tradedVolumeElements = 30;
+
             var main_doc  = getMainDoc();
             updatePriceButtons  = function()  {return runnerList.selectAll('.l1 .buttonAppearance,.b1 .buttonAppearance')[0];};
             runnerList    = d3.select(main_doc).select("#runnerList");
@@ -157,8 +198,54 @@ function d3Plot() {
             getPriceButton      = function(l) {return l - 2;};
             getTooltipContainer = function()  {return chartDiv;};
             isChartShowing      = function()  {return getMainDoc().getElementById('chartDiv') !== null;};
+            totalMatched = function() {return d3.select(main_doc).select('#m1_TotalMoneyMatched');};
         }
     }
+
+    var isYui3 = d3.select(".cont-runners")[0][0] !== null;
+    setAccessFunctions(isYui3);
+
+    for (var i = 0; i < tradedVolumeElements; i++) {
+        tradedVolume[i] = {time: timeSlot++, value: 0}
+    }
+
+    var x = d3.scale.linear()
+        .domain([0, 1])
+        .range([0, barWidth]);
+
+    var y = d3.scale.linear()
+        .domain([0, 100])
+        .rangeRound([pieHeight - barMargin.top - barMargin.bottom, 0]);
+
+    function drawChart() {
+
+        y.domain([0, Math.max(maxVol,100)]);
+        yaxis.call(yAxis);
+
+        var h = pieHeight - barMargin.top - barMargin.bottom;
+
+        var rect = chart.selectAll("rect")
+            .data(tradedVolume, function(d) { return d.time; });
+
+        rect.enter().insert("rect", "line")
+                .attr("x", function(d, i) { return x(i + 1) - .5; })
+                .attr("y", function(d) { return y(d.value) - .5; })
+                .attr("width", barWidth)
+                .attr("height", function(d) { return h - y(d.value); })
+                .attr("fill", "teal")
+            .transition()
+                .duration(1000)
+                .attr("x", function(d, i) { return x(i) - .5; });
+
+        rect.transition()
+            .duration(1000)
+            .attr("x", function(d, i) { return x(i) - .5; })
+            .attr("y", function(d) { return y(d.value) - .5; })
+            .attr("height", function(d) { return h - y(d.value); });
+
+        rect.exit().remove();
+    }
+
 
     var toolTipChooser = [
         function(name, priceset){return "£" + priceset.backDepth + " to Back " + name + " @ " + (1.0 / priceset.backPrice).toFixed(2);},
@@ -168,7 +255,7 @@ function d3Plot() {
 
     function setToolTipText(d, ix) {
         var name = runnerLabels[Math.floor(ix / 3)].innerHTML;
-        var priceset = latestprices[Math.floor(ix / 3)];
+        var priceset = latestPrices[Math.floor(ix / 3)];
 
         tooltip.text(toolTipChooser[mod(ix, 3)](name, priceset));
         tooltip.style("visibility", "visible");
@@ -180,8 +267,11 @@ function d3Plot() {
         }
         refreshPrices();  // Note prices will be one sample lagged in chart
         updatePrices();
-        path.data(pie(sections));
+        path.data(pie(pieSections));
         path.transition().duration(750).attrTween("d", arcTween); 
+
+        drawChart();
+        d3.timer.flush();
         setTimeout(change, 1000);
     }
 
@@ -193,15 +283,11 @@ function d3Plot() {
         };
     }
 
-    var isYui3 = d3.select(".cont-runners")[0][0] !== null;
-    setAccessFunctions(isYui3);
-
     runnerList.insert("div", ":first-child")
-        .attr("align", "center")
         .attr("id", "chartDiv");
 
     numberOfRunners = priceButtons.length / 2;
-    sections = [numberOfRunners * 3];
+    pieSections = [numberOfRunners * 3];
 
     var chartDiv = runnerList.select("#chartDiv");
    
@@ -216,8 +302,8 @@ function d3Plot() {
     var pie = d3.layout.pie().sort(null);
 
     var arc = d3.svg.arc()
-        .innerRadius(radius - 60)
-        .outerRadius(radius - 20);
+        .innerRadius(pieRadius - 40)
+        .outerRadius(pieRadius);
 
     var tooltip = getTooltipContainer().append("div")
         .style("position", "absolute")
@@ -229,13 +315,13 @@ function d3Plot() {
         .style("padding", "3px");
 
     var svg = chartDiv.append("svg")
-        .attr("width", width)
-        .attr("height", height)
+        .attr("width", pieWidth + pieLeftMargin)
+        .attr("height", pieHeight)
         .append("g")
-            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+            .attr("transform", "translate(" + ((pieWidth / 2) + pieLeftMargin) + "," + pieHeight / 2 + ")");
         
     var path = svg.selectAll("path")
-        .data(pie(sections))
+        .data(pie(pieSections))
         .enter().append("path")
         .attr("fill", getColour)
         .on("mouseover", setToolTipText)
@@ -243,6 +329,53 @@ function d3Plot() {
         .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
         .attr("d", arc)
         .each(function(d) { this._current = d; }); 
+
+    var chart = chartDiv.append("svg")
+        .attr("class", "chart")
+        .attr("width", (barWidth * tradedVolume.length) + barMargin.left + barMargin.right)
+        .attr("height", pieHeight)
+        .attr("y", 10)
+        .append("g")
+            .attr("transform", "translate(" + barMargin.left + ", " + barMargin.top + ")");
+
+    chart.append("line")
+        .attr("x1", 0)
+        .attr("x2", barWidth * (tradedVolume.length + 1))
+        .attr("y1", pieHeight + 0.5)
+        .attr("y2", pieHeight + 0.5)
+        .attr("stroke-width", 0.5)
+        .style("stroke", "#000")
+        .attr("transform", "translate(0, -40)");
+
+    var yAxis = d3.svg.axis().orient("left").scale(y).ticks(3).tickFormat(volumeFormatter);
+
+    function volumeFormatter(d) {
+        var dd = d;
+        var suf = '';
+        var f = d3.format(".0f");
+
+        if (d >= 1000) {
+            dd  = d/1000;
+            suf = 'k';
+            if (mod(d, 1000) !== 0) {
+                f = d3.format(".1f");
+            }
+        } else if (d >= 1000000) {
+            dd  = d/1000000;
+            suf = 'm';
+            if (mod(d, 1000000) !== 0) {
+                f = d3.format(".1f");
+            }
+        }
+        return "£" + f(dd) + suf;
+    }
+
+    var yaxis = chart.append("g").call(yAxis);
+
+    yaxis.selectAll("path")
+        .style("fill", "none")
+        .style("stroke", "#000")
+        .style("shape-rendering", "crispEdges");
 
     setTimeout(change, 1000);
 }
