@@ -28,8 +28,6 @@ var updatePriceButtons,
     getTooltipContainer,
     isChartShowing;
 
-function isD3Loaded() {return (window.d3 !== undefined);}
-
 // because safari doesn't allow percent signs in bookmarklets
 // and percent encoding upsets some minifiers
 function mod(n, d) {return n - (Math.floor(n/d) * d);}
@@ -43,14 +41,6 @@ var colourChooser = [
     ];
 
 function getColour(d, ix) { return colourChooser[mod(ix, 3)](ix);}
-
-function waitTillD3Loaded() {
-    if (isD3Loaded()) {
-        d3Plot();
-    } else {
-        setTimeout(waitTillD3Loaded, 250);
-    }
-}
 
 function refreshPrices() {
     var e = document.createEvent("MouseEvents");
@@ -166,6 +156,9 @@ function updatePrices() {
 }
 
 function d3Plot() {
+    if (window.d3 === undefined) {
+        return;
+    }
 
     function setAccessFunctions() {
         if (isYui3) {
@@ -381,8 +374,11 @@ function d3Plot() {
 }
 
 (function () {
-  if (!isD3Loaded()) {
-        document.body.appendChild(document.createElement("script")).src = "http://d3js.org/d3.v3.min.js";
-    }
-    waitTillD3Loaded();
+    var scr = document.createElement('script');
+    scr.type = "text/javascript";
+    scr.async = true;
+    scr.addEventListener('load', d3Plot, false);
+
+    scr.src = "http://d3js.org/d3.v3.min.js";
+    document.body.appendChild(scr);
 })();
