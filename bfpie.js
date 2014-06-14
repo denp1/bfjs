@@ -166,7 +166,14 @@ function d3Plot() {
             barMargin = {top: 20, right: 20, bottom: 20, left: 40};
             tradedVolumeElements = 27;
 
-            priceButtons  = d3.selectAll('.cta-back, .cta-lay')[0];
+            priceButtons  = d3.selectAll('.cta-back, .cta-lay').filter('.back, .lay')[0];
+            var mktId = priceButtons[0].id.split('_')[1].split('-')[0];
+            priceButtons = priceButtons.filter(
+                function(pb){
+                    return pb.id.indexOf(mktId)>0;
+                }
+            );
+
             runnerList    = d3.select(".cont-runners");
             refreshButton = d3.select(".mkt-refresh-btn")[0][0];
             runnerLabels  = runnerList.selectAll(".sel-name")[0];        
