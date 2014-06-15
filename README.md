@@ -13,7 +13,9 @@ updates the chart every second.  You can see it in action [here](http://vimeo.co
 Install
 =======
 
-The script runs as a [bookmarklet](http://en.wikipedia.org/wiki/Bookmarklet).
+Simply to use the script, follow the instructions [here](http://denp1.github.io/bfjs/).
+
+For developers, the script runs as a [bookmarklet](http://en.wikipedia.org/wiki/Bookmarklet).
 To convert the javascript to a bookmarklet, two steps are required.
   * Minifiy bfpie.js using a minifier that doesn't leave newlines in the source, such as
 an instance of  [YUI Compressor](http://refresh-sf.com/yui/) and prepend 'javascript:' to it.  
