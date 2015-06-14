@@ -26,7 +26,8 @@ var updatePriceButtons,
     getDepthButton,
     getPriceButton,
     getTooltipContainer,
-    isChartShowing;
+    isChartShowing,
+    isYui3;
 
 // because safari doesn't allow percent signs in bookmarklets
 // and percent encoding upsets some minifiers
@@ -61,12 +62,17 @@ function grabPrices() {
         var b1 = priceButtons[2 * i];
         var b2 = priceButtons[(2 * i) + 1];
 
+        if (isNewSite) { // swap them
+            var tmp=b1, b1=b2, b2=tmp;
+        }
+
         newPrices[i].backPrice = getPrice(true, b1);
         newPrices[i].layPrice  = getPrice(false, b2);
-        newPrices[i].spread    = newPrices[i].backPrice - newPrices[i].layPrice;
-
         newPrices[i].backDepth = getDepth(b1);
         newPrices[i].layDepth  = getDepth(b2);
+
+        newPrices[i].spread    = newPrices[i].backPrice - newPrices[i].layPrice;
+
     }
     return newPrices;
 }
@@ -161,28 +167,22 @@ function d3Plot() {
     }
 
     function setAccessFunctions() {
-        if (isYui3) {
+        if (isNewSite) {
             pieLeftMargin = 0;
             barMargin = {top: 20, right: 20, bottom: 20, left: 40};
             tradedVolumeElements = 27;
 
-            priceButtons  = d3.selectAll('.cta-back, .cta-lay').filter('.back, .lay')[0];
-            var mktId = priceButtons[0].id.split('_')[1].split('-')[0];
-            priceButtons = priceButtons.filter(
-                function(pb){
-                    return pb.id.indexOf(mktId)>0;
-                }
-            );
+            priceButtons  = d3.selectAll('.depth-lay-2, .depth-back-2')[0];
 
-            runnerList    = d3.select(".cont-runners");
-            refreshButton = d3.select(".mkt-refresh-btn")[0][0];
-            runnerLabels  = runnerList.selectAll(".sel-name")[0];        
+            runnerList    = d3.select(".runners-container");
+            refreshButton = d3.select(".refresh-btn")[0][0];
+            runnerLabels  = runnerList.selectAll(".runner-name")[0];
             updatePriceButtons  = function()  {return priceButtons;};
-            getDepthButton      = function(l) {return 3;};
-            getPriceButton      = function(l) {return 1;};
+            getDepthButton      = function(l) {return 2;};
+            getPriceButton      = function(l) {return 0;};
             getTooltipContainer = function()  {return d3.select("body");};
             isChartShowing      = function()  {return d3.select('#chartDiv')[0][0] !== null;};
-            totalMatched = function() {return d3.select('.total-matched-val');};
+            totalMatched = function() {return d3.select('.total-matched');};
         } else {
             pieLeftMargin = 10;
             barMargin = {top: 20, right: 20, bottom: 20, left: 40};
@@ -202,8 +202,8 @@ function d3Plot() {
         }
     }
 
-    var isYui3 = d3.select(".cont-runners")[0][0] !== null;
-    setAccessFunctions(isYui3);
+    isNewSite = d3.select(".runners-container")[0][0] !== null;
+    setAccessFunctions(isNewSite);
 
     for (var i = 0; i < tradedVolumeElements; i++) {
         tradedVolume[i] = {time: timeSlot++, value: 0}
@@ -386,6 +386,6 @@ function d3Plot() {
     scr.async = true;
     scr.addEventListener('load', d3Plot, false);
 
-    scr.src = "http://d3js.org/d3.v3.min.js";
+    scr.src = "https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js";
     document.body.appendChild(scr);
 })();
