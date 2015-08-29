@@ -1,6 +1,23 @@
 // started from http://bl.ocks.org/1346410
 // Color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/)
-var colorbrewer = {3: ["rgb(252,141,89)", "rgb(255,255,191)", "rgb(153,213,148)"], 4: ["rgb(215,25,28)", "rgb(253,174,97)", "rgb(171,221,164)", "rgb(43,131,186)"], 5: ["rgb(215,25,28)", "rgb(253,174,97)", "rgb(255,255,191)", "rgb(171,221,164)", "rgb(43,131,186)"], 6: ["rgb(213,62,79)", "rgb(252,141,89)", "rgb(254,224,139)", "rgb(230,245,152)", "rgb(153,213,148)", "rgb(50,136,189)"], 7: ["rgb(213,62,79)", "rgb(252,141,89)", "rgb(254,224,139)", "rgb(255,255,191)", "rgb(230,245,152)", "rgb(153,213,148)", "rgb(50,136,189)"], 8: ["rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)", "rgb(254,224,139)", "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)", "rgb(50,136,189)"], 9: ["rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)", "rgb(254,224,139)", "rgb(255,255,191)", "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)", "rgb(50,136,189)"], 10: ["rgb(158,1,66)", "rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)", "rgb(254,224,139)", "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)", "rgb(50,136,189)", "rgb(94,79,162)"], 11: ["rgb(158,1,66)", "rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)", "rgb(254,224,139)", "rgb(255,255,191)", "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)", "rgb(50,136,189)", "rgb(94,79,162)"]},
+var colorbrewer = {3: ["rgb(252,141,89)", "rgb(255,255,191)", "rgb(153,213,148)"],
+      4: ["rgb(215,25,28)", "rgb(253,174,97)", "rgb(171,221,164)", "rgb(43,131,186)"],
+      5: ["rgb(215,25,28)", "rgb(253,174,97)", "rgb(255,255,191)", "rgb(171,221,164)", "rgb(43,131,186)"],
+      6: ["rgb(213,62,79)", "rgb(252,141,89)", "rgb(254,224,139)", "rgb(230,245,152)",
+          "rgb(153,213,148)", "rgb(50,136,189)"],
+      7: ["rgb(213,62,79)", "rgb(252,141,89)", "rgb(254,224,139)", "rgb(255,255,191)",
+          "rgb(230,245,152)", "rgb(153,213,148)", "rgb(50,136,189)"],
+      8: ["rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)", "rgb(254,224,139)",
+          "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)", "rgb(50,136,189)"],
+      9: ["rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)", "rgb(254,224,139)",
+          "rgb(255,255,191)", "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)",
+          "rgb(50,136,189)"],
+      10: ["rgb(158,1,66)", "rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)",
+          "rgb(254,224,139)", "rgb(230,245,152)", "rgb(171,221,164)", "rgb(102,194,165)",
+          "rgb(50,136,189)", "rgb(94,79,162)"],
+      11: ["rgb(158,1,66)", "rgb(213,62,79)", "rgb(244,109,67)", "rgb(253,174,97)",
+          "rgb(254,224,139)", "rgb(255,255,191)", "rgb(230,245,152)", "rgb(171,221,164)",
+          "rgb(102,194,165)", "rgb(50,136,189)", "rgb(94,79,162)"]},
     pieWidth = 160,
     pieHeight = 200,
     pieLeftMargin,
@@ -21,7 +38,7 @@ var colorbrewer = {3: ["rgb(252,141,89)", "rgb(255,255,191)", "rgb(153,213,148)"
     lastTotal = 0,
     maxVol=100;
 
-// functions for navigating different versions of site 
+// functions for navigating different versions of site
 var updatePriceButtons,
     getDepthButton,
     getPriceButton,
@@ -131,7 +148,7 @@ function updatePrices() {
         }).spread;
 
     for (i = 0; i < numberOfRunners; i++) {
-        var otherLays   = totalLay  - latestPrices[i].layPrice, 
+        var otherLays   = totalLay  - latestPrices[i].layPrice,
             otherBacks  = totalBack - latestPrices[i].backPrice,
             notMoreThan = Math.min(latestPrices[i].backPrice, 1.0 - otherLays),
             notLessThan = Math.max(latestPrices[i].layPrice, 1.0 - otherBacks);
@@ -268,7 +285,7 @@ function d3Plot() {
         refreshPrices();  // Note prices will be one sample lagged in chart
         updatePrices();
         path.data(pie(pieSections));
-        path.transition().duration(750).attrTween("d", arcTween); 
+        path.transition().duration(750).attrTween("d", arcTween);
 
         drawChart();
         d3.timer.flush();
@@ -290,10 +307,10 @@ function d3Plot() {
     pieSections = [numberOfRunners * 3];
 
     var chartDiv = runnerList.select("#chartDiv");
-   
+
     updatePrices();
-    
-    if (numberOfRunners < 9) { 
+
+    if (numberOfRunners < 9) {
          colour = d3.scale.ordinal().range(colorbrewer[numberOfRunners + 1]);
     } else {
          colour = d3.scale.category20();
@@ -319,7 +336,7 @@ function d3Plot() {
         .attr("height", pieHeight)
         .append("g")
             .attr("transform", "translate(" + ((pieWidth / 2) + pieLeftMargin) + "," + pieHeight / 2 + ")");
-        
+
     var path = svg.selectAll("path")
         .data(pie(pieSections))
         .enter().append("path")
@@ -328,11 +345,12 @@ function d3Plot() {
         .on("mousemove", function(){return tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");})
         .on("mouseout", function(){return tooltip.style("visibility", "hidden");})
         .attr("d", arc)
-        .each(function(d) { this._current = d; }); 
+        .each(function(d) { this._current = d; });
 
     var chart = chartDiv.append("svg")
         .attr("class", "chart")
-        .attr("width", (barWidth * tradedVolume.length) + barMargin.left + barMargin.right)
+        .attr("width", "75%")
+//        .attr("width", (barWidth * tradedVolume.length) + barMargin.left + barMargin.right)
         .attr("height", pieHeight)
         .attr("y", 10)
         .append("g")
