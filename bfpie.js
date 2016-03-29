@@ -79,10 +79,6 @@ function grabPrices() {
         var b1 = priceButtons[2 * i];
         var b2 = priceButtons[(2 * i) + 1];
 
-        if (isNewSite) { // swap them
-            var tmp=b1, b1=b2, b2=tmp;
-        }
-
         newPrices[i].backPrice = getPrice(true, b1);
         newPrices[i].layPrice  = getPrice(false, b2);
         newPrices[i].backDepth = getDepth(b1);
@@ -183,13 +179,33 @@ function d3Plot() {
         return;
     }
 
+    function nullCheck(aList, aMessage) {
+      if ((typeof aList == 'undefined') || (aList.length == 0)) {
+        console.log(aMessage);
+        return false;
+      }
+      return true;
+    }
+
+    function validateAccess() {
+      nullCheck(priceButtons, 'priceButtons are not found');
+      nullCheck(runnerList, 'runnerList is not found');
+      nullCheck(runnerLabels, 'runnerLabels are not found');
+    }
+
     function setAccessFunctions() {
         if (isNewSite) {
             pieLeftMargin = 0;
             barMargin = {top: 20, right: 20, bottom: 20, left: 40};
             tradedVolumeElements = 27;
 
-            priceButtons  = d3.selectAll('.depth-lay-2, .depth-back-2')[0];
+            priceButtons  = d3.selectAll('.back .ng-scope, .lay .ng-scope')[0];
+            filterFn = function (x, i) {
+              m = mod(i, 6);
+              return ((m == 2) || (m == 3));
+            }
+
+            priceButtons = priceButtons.filter(filterFn);
 
             runnerList    = d3.select(".runners-container");
             refreshButton = d3.select(".refresh-btn")[0][0];
@@ -200,6 +216,7 @@ function d3Plot() {
             getTooltipContainer = function()  {return d3.select("body");};
             isChartShowing      = function()  {return d3.select('#chartDiv')[0][0] !== null;};
             totalMatched = function() {return d3.select('.total-matched');};
+            validateAccess();
         } else {
             pieLeftMargin = 10;
             barMargin = {top: 20, right: 20, bottom: 20, left: 40};
@@ -216,6 +233,7 @@ function d3Plot() {
             getTooltipContainer = function()  {return chartDiv;};
             isChartShowing      = function()  {return getMainDoc().getElementById('chartDiv') !== null;};
             totalMatched = function() {return d3.select(main_doc).select('#m1_TotalMoneyMatched');};
+            validateAccess();
         }
     }
 
@@ -304,6 +322,7 @@ function d3Plot() {
         .attr("id", "chartDiv");
 
     numberOfRunners = priceButtons.length / 2;
+
     pieSections = [numberOfRunners * 3];
 
     var chartDiv = runnerList.select("#chartDiv");
