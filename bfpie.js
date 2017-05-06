@@ -199,7 +199,9 @@ function d3Plot() {
             barMargin = {top: 20, right: 20, bottom: 20, left: 40};
             tradedVolumeElements = 27;
 
-            priceButtons  = d3.selectAll('.back .ng-scope, .lay .ng-scope')[0];
+            priceButtons  = d3.selectAll('.bet-buttons')[0];
+            // should return 18 back and lay buttons
+            // containing price and size information
             filterFn = function (x, i) {
               m = mod(i, 6);
               return ((m == 2) || (m == 3));
