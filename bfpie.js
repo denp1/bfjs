@@ -39,12 +39,7 @@ var colorbrewer = {3: ["rgb(252,141,89)", "rgb(255,255,191)", "rgb(153,213,148)"
     maxVol=100;
 
 // functions for navigating different versions of site
-var updatePriceButtons,
-    getDepthButton,
-    getPriceButton,
-    getTooltipContainer,
-    isChartShowing,
-    isYui3;
+var isChartShowing;
 
 // because safari doesn't allow percent signs in bookmarklets
 // and percent encoding upsets some minifiers
@@ -54,7 +49,7 @@ function getMaxPrice(isBackPrice) {return isBackPrice ? 1.0 : 1.0 / 10000.0;}
 
 var colourChooser = [
     function(ix){return d3.rgb(colour(Math.floor(ix/3))).darker(0.3);},  // backable prices
-    function(ix){return colour(numberOfRunners);},                       // spread
+    function(){return colour(numberOfRunners);},                       // spread
     function(ix){return d3.rgb(colour(Math.floor(ix/3))).brighter(0.3);} // layable prices
     ];
 
@@ -76,14 +71,12 @@ function grabPrices() {
 
     for (i = 0; i < numberOfRunners; i++) {
         newPrices[i] = {};
-        var b1 = priceButtons[2 * i];
-        var b2 = priceButtons[(2 * i) + 1];
+        ix = 2 * i;
 
-        newPrices[i].backPrice = getPrice(true, b1);
-        newPrices[i].layPrice  = getPrice(false, b2);
-        newPrices[i].backDepth = getDepth(b1);
-        newPrices[i].layDepth  = getDepth(b2);
-
+        newPrices[i].backPrice = getPrice(true, priceButtons[ix]);
+        newPrices[i].layPrice  = getPrice(false, priceButtons[ix + 1]);
+        newPrices[i].backDepth = getDepth(depthButtons[ix]);
+        newPrices[i].layDepth  = getDepth(depthButtons[ix + 1]);
         newPrices[i].spread    = newPrices[i].backPrice - newPrices[i].layPrice;
 
     }
@@ -91,12 +84,11 @@ function grabPrices() {
 }
 
 function getPrice(isBackPrice, w) {
-    var button = w.childNodes[getPriceButton(w.childNodes.length)];
-    if (button === undefined) {
+    if (w === undefined) {
         return getMaxPrice(isBackPrice);
     }
-    var txt = button.textContent.trim().replace(',', '');
-    if ((txt === "&nbsp;") || (txt.length === 0)) {
+    var txt = w.textContent.trim().replace(',', '');
+    if ((txt === "&nbsp;") || (txt.length === 0) || (txt == '0')) {
         return getMaxPrice(isBackPrice);
     } else {
         return 1.0 / parseFloat(txt);
@@ -104,11 +96,7 @@ function getPrice(isBackPrice, w) {
 }
 
 function getDepth(w) {
-    var button = w.childNodes[getDepthButton(w.childNodes.length)];
-    if (button === undefined) {
-        return 0.0;
-    }
-    var txt = button.textContent.trim().replace(',', '');
+    var txt = w.textContent.trim().replace(',', '');
     return (txt.length < 2) ? 0.0 : parseFloat(txt.substring(1));
 }
 
@@ -129,8 +117,6 @@ function updateVolumes() {
 function updatePrices() {
 
     updateVolumes();
-
-    priceButtons = updatePriceButtons();
 
     latestPrices = grabPrices();
     var totalBack = latestPrices.reduce(function(a, b) {
@@ -194,53 +180,22 @@ function d3Plot() {
     }
 
     function setAccessFunctions() {
-        if (isNewSite) {
-            pieLeftMargin = 0;
-            barMargin = {top: 20, right: 20, bottom: 20, left: 40};
-            tradedVolumeElements = 27;
+      pieLeftMargin = 0;
+      barMargin = {top: 20, right: 20, bottom: 20, left: 40};
+      tradedVolumeElements = 27;
 
-            priceButtons  = d3.selectAll('.bet-buttons')[0];
-            // should return 18 back and lay buttons
-            // containing price and size information
-            filterFn = function (x, i) {
-              m = mod(i, 6);
-              return ((m == 2) || (m == 3));
-            }
+      priceButtons  = d3.selectAll('.first-lay-cell .bet-button-price, .last-back-cell .bet-button-price')[0];
+      depthButtons = d3.selectAll('.first-lay-cell .bet-button-size, .last-back-cell .bet-button-size')[0];
 
-            priceButtons = priceButtons.filter(filterFn);
-
-            runnerList    = d3.select(".runners-container");
-            refreshButton = d3.select(".refresh-btn")[0][0];
-            runnerLabels  = runnerList.selectAll(".runner-name")[0];
-            updatePriceButtons  = function()  {return priceButtons;};
-            getDepthButton      = function(l) {return 2;};
-            getPriceButton      = function(l) {return 0;};
-            getTooltipContainer = function()  {return d3.select("body");};
-            isChartShowing      = function()  {return d3.select('#chartDiv')[0][0] !== null;};
-            totalMatched = function() {return d3.select('.total-matched');};
-            validateAccess();
-        } else {
-            pieLeftMargin = 10;
-            barMargin = {top: 20, right: 20, bottom: 20, left: 40};
-            tradedVolumeElements = 30;
-
-            var main_doc  = getMainDoc();
-            updatePriceButtons  = function()  {return runnerList.selectAll('.l1 .buttonAppearance,.b1 .buttonAppearance')[0];};
-            runnerList    = d3.select(main_doc).select("#runnerList");
-            refreshButton = d3.select(main_doc).select("#m1_btnRefresh")[0][0];
-            priceButtons  = updatePriceButtons();
-            runnerLabels  = runnerList.selectAll(".runnerName")[0];
-            getDepthButton      = function(l) {return l - 1;};
-            getPriceButton      = function(l) {return l - 2;};
-            getTooltipContainer = function()  {return chartDiv;};
-            isChartShowing      = function()  {return getMainDoc().getElementById('chartDiv') !== null;};
-            totalMatched = function() {return d3.select(main_doc).select('#m1_TotalMoneyMatched');};
-            validateAccess();
-        }
+      runnerList    = d3.select(".runners-container");
+      refreshButton = d3.select(".refresh-btn")[0][0];
+      runnerLabels  = runnerList.selectAll(".runner-name")[0];
+      isChartShowing      = function()  {return d3.select('#chartDiv')[0][0] !== null;};
+      totalMatched = function() {return d3.select('.total-matched');};
+      validateAccess();
     }
 
-    isNewSite = d3.select(".runners-container")[0][0] !== null;
-    setAccessFunctions(isNewSite);
+    setAccessFunctions();
 
     for (var i = 0; i < tradedVolumeElements; i++) {
         tradedVolume[i] = {time: timeSlot++, value: 0}
@@ -286,7 +241,7 @@ function d3Plot() {
 
     var toolTipChooser = [
         function(name, priceset){return "£" + priceset.backDepth + " to Back " + name + " @ " + (1.0 / priceset.backPrice).toFixed(2);},
-        function(name, priceset){return "Spread for " + name;},
+        function(name){return "Spread for " + name;},
         function(name, priceset){return "£" + priceset.layDepth + " to Lay " + name + " @ " + (1.0 / priceset.layPrice).toFixed(2);}
         ];
 
@@ -343,7 +298,7 @@ function d3Plot() {
         .innerRadius(pieRadius - 40)
         .outerRadius(pieRadius);
 
-    var tooltip = getTooltipContainer().append("div")
+    var tooltip = d3.select("body").append("div")
         .style("position", "absolute")
         .style("z-index", "10")
         .style("visibility", "hidden")
@@ -425,6 +380,6 @@ function d3Plot() {
     scr.async = true;
     scr.addEventListener('load', d3Plot, false);
 
-    scr.src = "https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js";
+    scr.src = "https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js";
     document.body.appendChild(scr);
 })();
