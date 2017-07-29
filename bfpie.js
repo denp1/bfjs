@@ -62,8 +62,8 @@ function refreshPrices() {
 }
 // for old version of the website, has embedded frames that select doesn't navigate
 function getMainDoc() {
-    return d3.select(d3.select("#site_sports")[0][0].contentDocument)
-        .select("#main")[0][0].contentDocument;
+    return d3.select(d3.select("#site_sports").nodes()[0].contentDocument)
+        .select("#main").nodes()[0].contentDocument;
 }
 
 function grabPrices() {
@@ -102,7 +102,7 @@ function getDepth(w) {
 
 function updateVolumes() {
 
-    newTotal = parseFloat(totalMatched()[0][0].textContent.substring(4).replace(/,/g,''));
+    newTotal = parseFloat(totalMatched().nodes()[0].textContent.substring(4).replace(/,/g,''));
     if (lastTotal != 0) {
         tradedVolume.shift();
         tradedVolume.push({time: timeSlot++, value: newTotal - lastTotal});
@@ -184,13 +184,13 @@ function d3Plot() {
       barMargin = {top: 20, right: 20, bottom: 20, left: 40};
       tradedVolumeElements = 27;
 
-      priceButtons  = d3.selectAll('.first-lay-cell .bet-button-price, .last-back-cell .bet-button-price')[0];
-      depthButtons = d3.selectAll('.first-lay-cell .bet-button-size, .last-back-cell .bet-button-size')[0];
+      priceButtons  = d3.selectAll('.first-lay-cell .bet-button-price, .last-back-cell .bet-button-price').nodes();
+      depthButtons = d3.selectAll('.first-lay-cell .bet-button-size, .last-back-cell .bet-button-size').nodes();
 
       runnerList    = d3.select(".runners-container");
-      refreshButton = d3.select(".refresh-btn")[0][0];
-      runnerLabels  = runnerList.selectAll(".runner-name")[0];
-      isChartShowing      = function()  {return d3.select('#chartDiv')[0][0] !== null;};
+      refreshButton = d3.select(".refresh-btn").nodes()[0];
+      runnerLabels  = runnerList.selectAll(".runner-name").nodes();
+      isChartShowing      = function()  {return d3.select('#chartDiv').nodes()[0] !== null;};
       totalMatched = function() {return d3.select('.total-matched');};
       validateAccess();
     }
@@ -201,11 +201,11 @@ function d3Plot() {
         tradedVolume[i] = {time: timeSlot++, value: 0}
     }
 
-    var x = d3.scale.linear()
+    var x = d3.scaleLinear()
         .domain([0, 1])
         .range([0, barWidth]);
 
-    var y = d3.scale.linear()
+    var y = d3.scaleLinear()
         .domain([0, 100])
         .rangeRound([pieHeight - barMargin.top - barMargin.bottom, 0]);
 
@@ -263,7 +263,7 @@ function d3Plot() {
         path.transition().duration(750).attrTween("d", arcTween);
 
         drawChart();
-        d3.timer.flush();
+        d3.timerFlush();
         setTimeout(change, 1000);
     }
 
@@ -287,14 +287,14 @@ function d3Plot() {
     updatePrices();
 
     if (numberOfRunners < 9) {
-         colour = d3.scale.ordinal().range(colorbrewer[numberOfRunners + 1]);
+         colour = d3.scaleOrdinal().range(colorbrewer[numberOfRunners + 1]);
     } else {
-         colour = d3.scale.category20();
+         colour = function(c) {return d3.schemeCategory20[c];};
     }
 
-    var pie = d3.layout.pie().sort(null);
+    var pie = d3.pie().sort(null);
 
-    var arc = d3.svg.arc()
+    var arc = d3.arc()
         .innerRadius(pieRadius - 40)
         .outerRadius(pieRadius);
 
@@ -341,7 +341,7 @@ function d3Plot() {
         .style("stroke", "#000")
         .attr("transform", "translate(0, -40)");
 
-    var yAxis = d3.svg.axis().orient("left").scale(y).ticks(3).tickFormat(volumeFormatter);
+    var yAxis = d3.axisLeft().scale(y).ticks(3).tickFormat(volumeFormatter);
 
     function volumeFormatter(d) {
         var dd = d;
@@ -380,6 +380,6 @@ function d3Plot() {
     scr.async = true;
     scr.addEventListener('load', d3Plot, false);
 
-    scr.src = "https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js";
+    scr.src = "https://cdnjs.cloudflare.com/ajax/libs/d3/4.10.0/d3.min.js";
     document.body.appendChild(scr);
 })();
