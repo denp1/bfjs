@@ -189,7 +189,7 @@ function d3Plot() {
 
       runnerList    = d3.select(".runners-container");
       refreshButton = d3.select(".refresh-btn").nodes()[0];
-      runnerLabels  = runnerList.selectAll(".runner-name").nodes();
+      runnerLabels  = d3.selectAll(".runner-name").nodes();
       isChartShowing      = function()  {return d3.select('#chartDiv').nodes()[0] !== null;};
       totalMatched = function() {return d3.select('.total-matched');};
       validateAccess();
