@@ -75,8 +75,8 @@ function grabPrices() {
 
         newPrices[i].backPrice = getPrice(true, priceButtons[ix]);
         newPrices[i].layPrice  = getPrice(false, priceButtons[ix + 1]);
-        newPrices[i].backDepth = getDepth(depthButtons[ix]);
-        newPrices[i].layDepth  = getDepth(depthButtons[ix + 1]);
+        newPrices[i].backDepth = getDepth(priceButtons[ix]);
+        newPrices[i].layDepth  = getDepth(priceButtons[ix + 1]);
         newPrices[i].spread    = newPrices[i].backPrice - newPrices[i].layPrice;
 
     }
@@ -87,7 +87,7 @@ function getPrice(isBackPrice, w) {
     if (w === undefined) {
         return getMaxPrice(isBackPrice);
     }
-    var txt = w.textContent.trim().replace(',', '');
+    var txt = w.innerText.split('\n')[0]
     if ((txt === "&nbsp;") || (txt.length === 0) || (txt == '0')) {
         return getMaxPrice(isBackPrice);
     } else {
@@ -96,8 +96,8 @@ function getPrice(isBackPrice, w) {
 }
 
 function getDepth(w) {
-    var txt = w.textContent.trim().replace(',', '');
-    return (txt.length < 2) ? 0.0 : parseFloat(txt.substring(1));
+    var txt = parseFloat(w.innerText.split('\n')[1].substring(1))
+    return (txt.length < 2) ? 0.0 : parseFloat(txt);
 }
 
 function updateVolumes() {
@@ -184,8 +184,8 @@ function d3Plot() {
       barMargin = {top: 20, right: 20, bottom: 20, left: 40};
       tradedVolumeElements = 27;
 
-      priceButtons  = d3.selectAll('.first-lay-cell .bet-button-price, .last-back-cell .bet-button-price').nodes();
-      depthButtons = d3.selectAll('.first-lay-cell .bet-button-size, .last-back-cell .bet-button-size').nodes();
+    //   priceButtons  = d3.selectAll('.first-lay-cell .bet-button-price, .last-back-cell .bet-button-price').nodes();
+      priceButtons  = d3.selectAll('.first-lay-cell, .last-back-cell').nodes();
 
       runnerList    = d3.select(".runners-container");
       refreshButton = d3.select(".refresh-btn").nodes()[0];
