@@ -289,7 +289,10 @@ function d3Plot() {
     if (numberOfRunners < 9) {
          colour = d3.scaleOrdinal().range(colorbrewer[numberOfRunners + 1]);
     } else {
-         colour = function(c) {return d3.schemeCategory20[c];};
+
+        const colourScheme = d3.schemeCategory10.concat(d3.schemeCategory10).slice(0, 20);
+        const colourScaled = d3.scaleOrdinal(colourScheme);
+        colour = function(c) {return colourScaled(c);};        
     }
 
     var pie = d3.pie().sort(null);
@@ -379,7 +382,7 @@ function d3Plot() {
     scr.type = "text/javascript";
     scr.async = true;
     scr.addEventListener('load', d3Plot, false);
+    scr.src = "https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js";
 
-    scr.src = "https://cdnjs.cloudflare.com/ajax/libs/d3/4.10.0/d3.min.js";
     document.body.appendChild(scr);
 })();
