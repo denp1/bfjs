@@ -96,8 +96,8 @@ function getPrice(isBackPrice, w) {
 }
 
 function getDepth(w) {
-    var txt = parseFloat(w.innerText.split('\n')[1].substring(1))
-    return (txt.length < 2) ? 0.0 : parseFloat(txt);
+    var textArray = w.innerText.split('\n');
+    return (textArray.length < 2) ? 0.0 : parseFloat(textArray[1].substring(1));
 }
 
 function updateVolumes() {
